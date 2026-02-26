@@ -1,7 +1,7 @@
 import json
 from scrapers.wanted import scrape_wanted
 from scrapers.saramin import scrape_saramin
-from scrapers.linkedin import scrape_linkedin
+
 from notifier.slack import send_slack_message
 from utils.dedup import filter_new_jobs
 
@@ -21,7 +21,7 @@ def main():
     all_jobs = []
     all_jobs += scrape_wanted()
     all_jobs += scrape_saramin()
-    all_jobs += scrape_linkedin()
+
 
     new_jobs, updated_seen = filter_new_jobs(all_jobs, seen)
     save_seen_jobs(updated_seen)
