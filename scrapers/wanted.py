@@ -1,22 +1,25 @@
 import requests
 
+# 원티드 직무 카테고리 ID (데이터 관련)
+# 872: 데이터 엔지니어, 873: 데이터 사이언티스트, 874: BI 엔지니어, 10110: AI/ML
 WANTED_API = "https://www.wanted.co.kr/api/v4/jobs"
-KEYWORDS = ["데이터 사이언티스트", "데이터 엔지니어", "ML 엔지니어", "머신러닝", "data scientist"]
+CATEGORY_IDS = [872, 873, 874, 10110]
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0",
     "wanted-user-language": "ko",
+    "Accept": "application/json",
 }
 
 def scrape_wanted():
     jobs = []
-    for keyword in KEYWORDS:
+    for category_id in CATEGORY_IDS:
         params = {
             "job_sort": "job.latest_order",
-            "years": -1,
             "limit": 20,
             "offset": 0,
-            "tag_type_names": keyword,
+            "job_category_tags": category_id,
+            "country": "kr",
         }
         resp = requests.get(WANTED_API, params=params, headers=HEADERS)
         if resp.status_code != 200:

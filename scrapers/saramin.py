@@ -2,7 +2,11 @@ import requests
 from bs4 import BeautifulSoup
 
 SARAMIN_URL = "https://www.saramin.co.kr/zf_user/search/recruit"
-KEYWORDS = ["데이터사이언티스트", "데이터엔지니어", "머신러닝엔지니어"]
+KEYWORDS = ["데이터사이언티스트", "데이터엔지니어", "머신러닝엔지니어", "데이터분석가"]
+
+RELEVANT_KEYWORDS = [
+    "데이터", "data", "ml", "ai", "머신러닝", "딥러닝", "분석", "scientist", "engineer"
+]
 
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 
@@ -27,11 +31,14 @@ def scrape_saramin():
             skill_els = item.select(".job_sector a")
             if not title_el:
                 continue
+            title = title_el.get_text(strip=True)
+            if not any(kw in title.lower() for kw in RELEVANT_KEYWORDS):
+                continue
             href = title_el.get("href", "")
             rec_idx = href.split("rec_idx=")[-1].split("&")[0] if "rec_idx=" in href else href
             jobs.append({
                 "id": f"saramin-{rec_idx}",
-                "title": title_el.get_text(strip=True),
+                "title": title,
                 "company": company_el.get_text(strip=True) if company_el else "",
                 "skills": [s.get_text(strip=True) for s in skill_els],
                 "description": "",

@@ -8,6 +8,8 @@ def test_main_runs_without_error():
     with patch("main.scrape_wanted", return_value=mock_jobs), \
          patch("main.scrape_saramin", return_value=[]), \
          patch("main.scrape_linkedin", return_value=[]), \
+         patch("main.load_seen_jobs", return_value=set()), \
+         patch("main.save_seen_jobs"), \
          patch("main.send_slack_message") as mock_slack:
         main()
         mock_slack.assert_called_once()

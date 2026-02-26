@@ -2,18 +2,28 @@ import requests
 from bs4 import BeautifulSoup
 
 LINKEDIN_URL = "https://www.linkedin.com/jobs/search/"
-KEYWORDS = ["data scientist", "data engineer", "machine learning engineer"]
+KEYWORDS = ["데이터 사이언티스트", "데이터 엔지니어", "머신러닝 엔지니어"]
+
+RELEVANT_KEYWORDS = [
+    "데이터", "data", "ml", "ai", "머신러닝", "machine learning",
+    "딥러닝", "deep learning", "분석", "analyst", "scientist", "engineer"
+]
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+    "Accept-Language": "ko-KR,ko;q=0.9",
 }
+
+def _is_relevant(title: str) -> bool:
+    title_lower = title.lower()
+    return any(kw in title_lower for kw in RELEVANT_KEYWORDS)
 
 def scrape_linkedin():
     jobs = []
     for keyword in KEYWORDS:
         params = {
             "keywords": keyword,
-            "location": "South Korea",
+            "location": "대한민국",
             "f_TPR": "r604800",
             "sortBy": "DD",
         }
@@ -28,11 +38,14 @@ def scrape_linkedin():
             company_el = item.select_one(".base-search-card__subtitle")
             if not link_el or not title_el:
                 continue
+            title = title_el.get_text(strip=True)
+            if not _is_relevant(title):
+                continue
             url = link_el.get("href", "").split("?")[0]
             job_id = url.rstrip("/").split("/")[-1]
             jobs.append({
                 "id": f"linkedin-{job_id}",
-                "title": title_el.get_text(strip=True),
+                "title": title,
                 "company": company_el.get_text(strip=True) if company_el else "",
                 "skills": [],
                 "description": "",
