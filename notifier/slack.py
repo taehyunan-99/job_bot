@@ -23,9 +23,9 @@ def format_message(jobs: list) -> str:
         lines.append("━" * 32)
         for i, job in enumerate(source_jobs, 1):
             rows = [f"*{i}. <{job['url']}|{job['title']}>*"]
-            rows.append(f"  • 회사     : {job['company']}")
+            rows.append(f"  • 회사 : {job['company']}")
             if job.get("location"):
-                rows.append(f"  • 근무지   : {job['location']}")
+                rows.append(f"  • 근무지 : {job['location']}")
             if job.get("skills"):
                 rows.append(f"  • 기술스택 : {' · '.join(job['skills'][:5])}")
             if job.get("main_tasks"):
