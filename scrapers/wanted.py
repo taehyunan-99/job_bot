@@ -11,6 +11,20 @@ HEADERS = {
 
 MAX_PER_SOURCE = 5
 
+def _fetch_detail(job_id: int) -> dict:
+    resp = requests.get(f"{WANTED_API}/{job_id}", headers=HEADERS)
+    if resp.status_code != 200:
+        return {}
+    job = resp.json().get("job", {})
+    detail = job.get("detail", {})
+    address = job.get("address", {})
+    return {
+        "skills": [t["title"] for t in job.get("skill_tags", [])],
+        "requirements": detail.get("requirements", "").strip()[:200],
+        "main_tasks": detail.get("main_tasks", "").strip()[:200],
+        "location": address.get("location_key", "") or address.get("full_location", ""),
+    }
+
 def scrape_wanted():
     jobs = []
     for query in QUERIES:
@@ -24,20 +38,26 @@ def scrape_wanted():
         resp = requests.get(WANTED_API, params=params, headers=HEADERS)
         if resp.status_code != 200:
             continue
-        data = resp.json().get("data", [])
-        for item in data:
+        for item in resp.json().get("data", []):
             jobs.append({
                 "id": f"wanted-{item['id']}",
+                "_raw_id": item["id"],
                 "title": item.get("position", ""),
                 "company": item["company"]["name"],
-                "skills": [],
                 "url": f"https://www.wanted.co.kr/wd/{item['id']}",
                 "source": "원티드",
             })
+
     seen_ids = set()
     unique = []
     for j in jobs:
         if j["id"] not in seen_ids:
             seen_ids.add(j["id"])
             unique.append(j)
-    return unique[:MAX_PER_SOURCE]
+    unique = unique[:MAX_PER_SOURCE]
+
+    for j in unique:
+        detail = _fetch_detail(j.pop("_raw_id"))
+        j.update(detail)
+
+    return unique

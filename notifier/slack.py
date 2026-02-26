@@ -18,10 +18,15 @@ def format_message(jobs: list) -> str:
         lines.append(f"\n*✅ {source} ({len(source_jobs)}건)*")
         lines.append("─" * 30)
         for i, job in enumerate(source_jobs, 1):
-            skills = " · ".join(job["skills"][:5]) if job.get("skills") else None
-            entry = f"*{i}. <{job['url']}|{job['title']}>*\n    🏢 {job['company']}"
-            if skills:
-                entry += f"\n    🛠 {skills}"
+            entry = f"*{i}. <{job['url']}|{job['title']}>*\n    회사 : {job['company']}"
+            if job.get("location"):
+                entry += f"\n    근무지 : {job['location']}"
+            if job.get("skills"):
+                entry += f"\n    기술 스택 : {' · '.join(job['skills'][:5])}"
+            if job.get("main_tasks"):
+                entry += f"\n    주요 업무 : {job['main_tasks'][:100]}"
+            if job.get("requirements"):
+                entry += f"\n    자격 요건 : {job['requirements'][:100]}"
             lines.append(entry)
 
     return "\n".join(lines)

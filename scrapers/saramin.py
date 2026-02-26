@@ -37,12 +37,16 @@ def scrape_saramin():
                 continue
             href = title_el.get("href", "")
             rec_idx = href.split("rec_idx=")[-1].split("&")[0] if "rec_idx=" in href else href
+            location_els = item.select(".job_condition span")
+            location = location_els[0].get_text(strip=True) if location_els else ""
             jobs.append({
                 "id": f"saramin-{rec_idx}",
                 "title": title,
                 "company": company_el.get_text(strip=True) if company_el else "",
                 "skills": [s.get_text(strip=True) for s in skill_els],
-                "description": "",
+                "location": location,
+                "requirements": "",
+                "main_tasks": "",
                 "url": f"https://www.saramin.co.kr{href}",
                 "source": "사람인",
             })
