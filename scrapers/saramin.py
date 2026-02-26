@@ -21,7 +21,7 @@ def scrape_saramin():
             "recruitPageCount": 20,
             "recruitSort": "reg_dt",
         }
-        resp = requests.get(SARAMIN_URL, params=params, headers=HEADERS)
+        resp = requests.get(SARAMIN_URL, params=params, headers=HEADERS, timeout=10)
         if resp.status_code != 200:
             continue
         soup = BeautifulSoup(resp.text, "html.parser")

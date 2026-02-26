@@ -4,8 +4,16 @@ from notifier.slack import send_slack_message
 
 def main():
     all_jobs = []
-    all_jobs += scrape_wanted()
-    all_jobs += scrape_saramin()
+
+    try:
+        all_jobs += scrape_wanted()
+    except Exception as e:
+        print(f"원티드 크롤링 실패: {e}")
+
+    try:
+        all_jobs += scrape_saramin()
+    except Exception as e:
+        print(f"사람인 크롤링 실패: {e}")
 
     if all_jobs:
         send_slack_message(all_jobs)

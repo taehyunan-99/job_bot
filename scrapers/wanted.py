@@ -12,7 +12,7 @@ HEADERS = {
 MAX_PER_SOURCE = 5
 
 def _fetch_detail(job_id: int) -> dict:
-    resp = requests.get(f"{WANTED_API}/{job_id}", headers=HEADERS)
+    resp = requests.get(f"{WANTED_API}/{job_id}", headers=HEADERS, timeout=10)
     if resp.status_code != 200:
         return {}
     job = resp.json().get("job", {})
@@ -35,7 +35,7 @@ def scrape_wanted():
             "country": "kr",
             "query": query,
         }
-        resp = requests.get(WANTED_API, params=params, headers=HEADERS)
+        resp = requests.get(WANTED_API, params=params, headers=HEADERS, timeout=10)
         if resp.status_code != 200:
             continue
         for item in resp.json().get("data", []):
