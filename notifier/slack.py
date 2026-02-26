@@ -6,28 +6,34 @@ from collections import defaultdict
 def _get_webhook_url():
     return os.environ.get("SLACK_WEBHOOK_URL", "")
 
+def _truncate(text: str, length: int = 120) -> str:
+    text = text.strip().replace("\n", " / ")
+    return text[:length] + "..." if len(text) > length else text
+
 def format_message(jobs: list) -> str:
     today = date.today().strftime("%Y-%m-%d")
-    lines = [f"📊 *[데이터 직무 주간 브리핑]* {today}\n"]
+    lines = [f"*[데이터 직무 브리핑] {today}*\n"]
 
     by_source = defaultdict(list)
     for job in jobs:
         by_source[job["source"]].append(job)
 
     for source, source_jobs in by_source.items():
-        lines.append(f"\n*✅ {source} ({len(source_jobs)}건)*")
-        lines.append("─" * 30)
+        lines.append(f"*{source} ({len(source_jobs)}건)*")
+        lines.append("━" * 32)
         for i, job in enumerate(source_jobs, 1):
-            entry = f"*{i}. <{job['url']}|{job['title']}>*\n    회사 : {job['company']}"
+            rows = [f"*{i}. <{job['url']}|{job['title']}>*"]
+            rows.append(f"  • 회사     : {job['company']}")
             if job.get("location"):
-                entry += f"\n    근무지 : {job['location']}"
+                rows.append(f"  • 근무지   : {job['location']}")
             if job.get("skills"):
-                entry += f"\n    기술 스택 : {' · '.join(job['skills'][:5])}"
+                rows.append(f"  • 기술스택 : {' · '.join(job['skills'][:5])}")
             if job.get("main_tasks"):
-                entry += f"\n    주요 업무 : {job['main_tasks'][:100]}"
+                rows.append(f"  • 주요업무 : {_truncate(job['main_tasks'])}")
             if job.get("requirements"):
-                entry += f"\n    자격 요건 : {job['requirements'][:100]}"
-            lines.append(entry)
+                rows.append(f"  • 자격요건 : {_truncate(job['requirements'])}")
+            lines.append("\n".join(rows))
+        lines.append("")
 
     return "\n".join(lines)
 
