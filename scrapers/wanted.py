@@ -28,10 +28,10 @@ def scrape_wanted():
         for item in data:
             jobs.append({
                 "id": f"wanted-{item['id']}",
-                "title": item["position"]["name"],
+                "title": item["position"],
                 "company": item["company"]["name"],
                 "skills": [t["keyword"] for t in item.get("skill_tags", [])],
-                "description": item.get("job_category", {}).get("name", ""),
+                "description": "",
                 "url": f"https://www.wanted.co.kr/wd/{item['id']}",
                 "source": "원티드",
             })
