@@ -21,13 +21,6 @@ def _is_relevant(title: str) -> bool:
     t = title.lower()
     return any(kw in t for kw in RELEVANT_KEYWORDS)
 
-def _fetch_skills(job_id: int) -> list:
-    resp = requests.get(f"{WANTED_API}/{job_id}", headers=HEADERS)
-    if resp.status_code != 200:
-        return []
-    job = resp.json().get("job", {})
-    return [t["keyword"] for t in job.get("skill_tags", [])]
-
 def scrape_wanted():
     jobs = []
     for keyword in KEYWORDS:
@@ -48,7 +41,6 @@ def scrape_wanted():
                 continue
             jobs.append({
                 "id": f"wanted-{item['id']}",
-                "_raw_id": item["id"],
                 "title": title,
                 "company": item["company"]["name"],
                 "skills": [],
@@ -62,7 +54,4 @@ def scrape_wanted():
         if j["id"] not in seen_ids:
             seen_ids.add(j["id"])
             unique.append(j)
-    unique = unique[:MAX_PER_SOURCE]
-    for j in unique:
-        j["skills"] = _fetch_skills(j.pop("_raw_id"))
-    return unique
+    return unique[:MAX_PER_SOURCE]
