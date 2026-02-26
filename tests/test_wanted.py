@@ -6,10 +6,9 @@ def test_scrape_wanted_returns_list():
         "data": [
             {
                 "id": 12345,
-                "position": {"name": "데이터 사이언티스트"},
+                "position": "데이터 사이언티스트",
                 "company": {"name": "카카오"},
                 "skill_tags": [{"keyword": "Python"}, {"keyword": "SQL"}],
-                "job_category": {"name": "데이터 엔지니어링"},
             }
         ]
     }

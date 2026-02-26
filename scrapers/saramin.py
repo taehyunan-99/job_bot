@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 
 SARAMIN_URL = "https://www.saramin.co.kr/zf_user/search/recruit"
 KEYWORDS = ["데이터사이언티스트", "데이터엔지니어", "머신러닝엔지니어", "데이터분석가"]
+MAX_PER_SOURCE = 5
 
 RELEVANT_KEYWORDS = [
     "데이터", "data", "ml", "ai", "머신러닝", "딥러닝", "분석", "scientist", "engineer"
@@ -51,4 +52,4 @@ def scrape_saramin():
         if j["id"] not in seen_ids:
             seen_ids.add(j["id"])
             unique.append(j)
-    return unique
+    return unique[:MAX_PER_SOURCE]

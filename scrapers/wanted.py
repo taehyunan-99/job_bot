@@ -1,9 +1,13 @@
 import requests
 
-# 원티드 직무 카테고리 ID (데이터 관련)
-# 872: 데이터 엔지니어, 873: 데이터 사이언티스트, 874: BI 엔지니어, 10110: AI/ML
 WANTED_API = "https://www.wanted.co.kr/api/v4/jobs"
-CATEGORY_IDS = [872, 873, 874, 10110]
+KEYWORDS = ["데이터 사이언티스트", "데이터 엔지니어", "머신러닝", "AI 엔지니어"]
+
+RELEVANT_KEYWORDS = [
+    "데이터", "data", "ml", "ai", "머신러닝", "machine learning",
+    "딥러닝", "deep learning", "분석가", "사이언티스트", "scientist",
+    "data engineer", "mlops", "llm"
+]
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0",
@@ -11,24 +15,33 @@ HEADERS = {
     "Accept": "application/json",
 }
 
+MAX_PER_SOURCE = 5
+
+def _is_relevant(title: str) -> bool:
+    t = title.lower()
+    return any(kw in t for kw in RELEVANT_KEYWORDS)
+
 def scrape_wanted():
     jobs = []
-    for category_id in CATEGORY_IDS:
+    for keyword in KEYWORDS:
         params = {
             "job_sort": "job.latest_order",
             "limit": 20,
             "offset": 0,
-            "job_category_tags": category_id,
             "country": "kr",
+            "tag_type_names": keyword,
         }
         resp = requests.get(WANTED_API, params=params, headers=HEADERS)
         if resp.status_code != 200:
             continue
         data = resp.json().get("data", [])
         for item in data:
+            title = item.get("position", "")
+            if not _is_relevant(title):
+                continue
             jobs.append({
                 "id": f"wanted-{item['id']}",
-                "title": item["position"],
+                "title": title,
                 "company": item["company"]["name"],
                 "skills": [t["keyword"] for t in item.get("skill_tags", [])],
                 "description": "",
@@ -41,4 +54,4 @@ def scrape_wanted():
         if j["id"] not in seen_ids:
             seen_ids.add(j["id"])
             unique.append(j)
-    return unique
+    return unique[:MAX_PER_SOURCE]

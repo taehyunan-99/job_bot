@@ -2,11 +2,14 @@ import requests
 from bs4 import BeautifulSoup
 
 LINKEDIN_URL = "https://www.linkedin.com/jobs/search/"
-KEYWORDS = ["데이터 사이언티스트", "데이터 엔지니어", "머신러닝 엔지니어"]
+KEYWORDS = ["데이터 사이언티스트 한국", "데이터 엔지니어 한국", "머신러닝 엔지니어 한국"]
+
+# 한국 geoId
+KOREA_GEO_ID = "105149290"
 
 RELEVANT_KEYWORDS = [
     "데이터", "data", "ml", "ai", "머신러닝", "machine learning",
-    "딥러닝", "deep learning", "분석", "analyst", "scientist", "engineer"
+    "딥러닝", "deep learning", "사이언티스트", "scientist", "mlops", "llm"
 ]
 
 HEADERS = {
@@ -14,9 +17,11 @@ HEADERS = {
     "Accept-Language": "ko-KR,ko;q=0.9",
 }
 
+MAX_PER_SOURCE = 5
+
 def _is_relevant(title: str) -> bool:
-    title_lower = title.lower()
-    return any(kw in title_lower for kw in RELEVANT_KEYWORDS)
+    t = title.lower()
+    return any(kw in t for kw in RELEVANT_KEYWORDS)
 
 def scrape_linkedin():
     jobs = []
@@ -24,6 +29,7 @@ def scrape_linkedin():
         params = {
             "keywords": keyword,
             "location": "대한민국",
+            "geoId": KOREA_GEO_ID,
             "f_TPR": "r604800",
             "sortBy": "DD",
         }
@@ -36,9 +42,14 @@ def scrape_linkedin():
             link_el = item.select_one("a.base-card__full-link")
             title_el = item.select_one(".base-search-card__title")
             company_el = item.select_one(".base-search-card__subtitle")
+            location_el = item.select_one(".job-search-card__location")
             if not link_el or not title_el:
                 continue
             title = title_el.get_text(strip=True)
+            location = location_el.get_text(strip=True) if location_el else ""
+            # 한국 공고만 허용
+            if location and "한국" not in location and "Korea" not in location and "Seoul" not in location and "서울" not in location and "부산" not in location:
+                continue
             if not _is_relevant(title):
                 continue
             url = link_el.get("href", "").split("?")[0]
@@ -58,4 +69,4 @@ def scrape_linkedin():
         if j["id"] not in seen_ids:
             seen_ids.add(j["id"])
             unique.append(j)
-    return unique
+    return unique[:MAX_PER_SOURCE]
