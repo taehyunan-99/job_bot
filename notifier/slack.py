@@ -30,8 +30,7 @@ def format_message(jobs: list) -> str:
                 rows.append(f"  • 기술스택 : {' · '.join(job['skills'][:5])}")
             if job.get("main_tasks"):
                 rows.append(f"  • 주요업무 : {_truncate(job['main_tasks'])}")
-            if job.get("requirements"):
-                rows.append(f"  • 자격요건 : {_truncate(job['requirements'])}")
+
             lines.append("\n".join(rows))
         lines.append("")
 
