@@ -18,7 +18,7 @@ def test_scrape_wanted_returns_list():
     empty_resp.json.return_value = {"data": []}
 
     with patch("scrapers.wanted.requests.get") as mock_get:
-        mock_get.side_effect = [mock_resp, empty_resp, empty_resp, empty_resp]
+        mock_get.side_effect = [mock_resp, empty_resp, empty_resp]
         jobs = scrape_wanted()
 
     assert len(jobs) == 1

@@ -1,13 +1,7 @@
 import requests
 
 WANTED_API = "https://www.wanted.co.kr/api/v4/jobs"
-KEYWORDS = ["데이터 사이언티스트", "데이터 엔지니어", "머신러닝", "AI 엔지니어"]
-
-RELEVANT_KEYWORDS = [
-    "데이터", "data", "ml", "ai", "머신러닝", "machine learning",
-    "딥러닝", "deep learning", "분석가", "사이언티스트", "scientist",
-    "data engineer", "mlops", "llm"
-]
+QUERIES = ["데이터 사이언티스트", "데이터 엔지니어", "머신러닝 엔지니어"]
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0",
@@ -17,34 +11,26 @@ HEADERS = {
 
 MAX_PER_SOURCE = 5
 
-def _is_relevant(title: str) -> bool:
-    t = title.lower()
-    return any(kw in t for kw in RELEVANT_KEYWORDS)
-
 def scrape_wanted():
     jobs = []
-    for keyword in KEYWORDS:
+    for query in QUERIES:
         params = {
             "job_sort": "job.latest_order",
-            "limit": 20,
+            "limit": 10,
             "offset": 0,
             "country": "kr",
-            "tag_type_names": keyword,
+            "query": query,
         }
         resp = requests.get(WANTED_API, params=params, headers=HEADERS)
         if resp.status_code != 200:
             continue
         data = resp.json().get("data", [])
         for item in data:
-            title = item.get("position", "")
-            if not _is_relevant(title):
-                continue
             jobs.append({
                 "id": f"wanted-{item['id']}",
-                "title": title,
+                "title": item.get("position", ""),
                 "company": item["company"]["name"],
                 "skills": [],
-                "description": "",
                 "url": f"https://www.wanted.co.kr/wd/{item['id']}",
                 "source": "원티드",
             })
