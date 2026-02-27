@@ -2,17 +2,15 @@ name: Job Bot
 
 on:
   schedule:
-    # 월/수/금 21:00 KST = 12:00 UTC
-    - cron: "0 12 * * 1,3,5"
-  workflow_dispatch:
+    - cron: "0 12 * * 1,3,5"  # 월/수/금 UTC 12:00 (KST 21:00)
+  workflow_dispatch:  # 수동 실행
 
 jobs:
-  run-bot:
+  send-jobs:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -27,11 +25,3 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: python main.py
-
-      - name: Commit updated seen_jobs.json
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add seen_jobs.json
-          git diff --cached --quiet || git commit -m "chore: update seen_jobs"
-          git push
