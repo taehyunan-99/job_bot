@@ -1,23 +1,11 @@
 import requests
 from bs4 import BeautifulSoup
+from utils.dedup import deduplicate
+from scrapers.config import MAX_PER_SOURCE, REQUEST_TIMEOUT, RELEVANT_KEYWORDS, KOREA_LOCATIONS, DEFAULT_HEADERS
 
 LINKEDIN_URL = "https://www.linkedin.com/jobs/search/"
 KEYWORDS = ["데이터 사이언티스트 한국", "데이터 엔지니어 한국", "머신러닝 엔지니어 한국"]
-
-# 한국 geoId
 KOREA_GEO_ID = "105149290"
-
-RELEVANT_KEYWORDS = [
-    "데이터", "data", "ml", "ai", "머신러닝", "machine learning",
-    "딥러닝", "deep learning", "사이언티스트", "scientist", "mlops", "llm"
-]
-
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-    "Accept-Language": "ko-KR,ko;q=0.9",
-}
-
-MAX_PER_SOURCE = 5
 
 def _is_relevant(title: str) -> bool:
     t = title.lower()
@@ -33,12 +21,11 @@ def scrape_linkedin():
             "f_TPR": "r604800",
             "sortBy": "DD",
         }
-        resp = requests.get(LINKEDIN_URL, params=params, headers=HEADERS)
+        resp = requests.get(LINKEDIN_URL, params=params, headers=DEFAULT_HEADERS, timeout=REQUEST_TIMEOUT)
         if resp.status_code != 200:
             continue
         soup = BeautifulSoup(resp.text, "html.parser")
-        items = soup.select(".base-card")
-        for item in items:
+        for item in soup.select(".base-card"):
             link_el = item.select_one("a.base-card__full-link")
             title_el = item.select_one(".base-search-card__title")
             company_el = item.select_one(".base-search-card__subtitle")
@@ -47,8 +34,7 @@ def scrape_linkedin():
                 continue
             title = title_el.get_text(strip=True)
             location = location_el.get_text(strip=True) if location_el else ""
-            # 한국 공고만 허용
-            if location and "한국" not in location and "Korea" not in location and "Seoul" not in location and "서울" not in location and "부산" not in location:
+            if location and not any(loc in location for loc in KOREA_LOCATIONS):
                 continue
             if not _is_relevant(title):
                 continue
@@ -59,14 +45,8 @@ def scrape_linkedin():
                 "title": title,
                 "company": company_el.get_text(strip=True) if company_el else "",
                 "skills": [],
-                "description": "",
+                "location": location,
                 "url": url,
                 "source": "링크드인",
             })
-    seen_ids = set()
-    unique = []
-    for j in jobs:
-        if j["id"] not in seen_ids:
-            seen_ids.add(j["id"])
-            unique.append(j)
-    return unique[:MAX_PER_SOURCE]
+    return deduplicate(jobs)[:MAX_PER_SOURCE]

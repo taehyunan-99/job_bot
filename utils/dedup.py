@@ -1,7 +1,9 @@
-def filter_new_jobs(jobs, seen: set):
-    new_jobs = []
+def deduplicate(jobs: list) -> list:
+    """Return jobs with duplicate IDs removed, preserving order."""
+    seen = set()
+    unique = []
     for job in jobs:
         if job["id"] not in seen:
-            new_jobs.append(job)
             seen.add(job["id"])
-    return new_jobs, seen
+            unique.append(job)
+    return unique

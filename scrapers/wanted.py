@@ -1,4 +1,6 @@
 import requests
+from utils.dedup import deduplicate
+from scrapers.config import MAX_PER_SOURCE, REQUEST_TIMEOUT
 
 WANTED_API = "https://www.wanted.co.kr/api/v4/jobs"
 QUERIES = ["데이터 사이언티스트", "데이터 엔지니어", "머신러닝 엔지니어"]
@@ -9,10 +11,8 @@ HEADERS = {
     "Accept": "application/json",
 }
 
-MAX_PER_SOURCE = 5
-
 def _fetch_detail(job_id: int) -> dict:
-    resp = requests.get(f"{WANTED_API}/{job_id}", headers=HEADERS, timeout=10)
+    resp = requests.get(f"{WANTED_API}/{job_id}", headers=HEADERS, timeout=REQUEST_TIMEOUT)
     if resp.status_code != 200:
         return {}
     job = resp.json().get("job", {})
@@ -35,29 +35,29 @@ def scrape_wanted():
             "country": "kr",
             "query": query,
         }
-        resp = requests.get(WANTED_API, params=params, headers=HEADERS, timeout=10)
+        resp = requests.get(WANTED_API, params=params, headers=HEADERS, timeout=REQUEST_TIMEOUT)
         if resp.status_code != 200:
             continue
         for item in resp.json().get("data", []):
-            jobs.append({
-                "id": f"wanted-{item['id']}",
-                "_raw_id": item["id"],
+            raw_id = item["id"]
+            jobs.append((raw_id, {
+                "id": f"wanted-{raw_id}",
                 "title": item.get("position", ""),
-                "company": item["company"]["name"],
-                "url": f"https://www.wanted.co.kr/wd/{item['id']}",
+                "company": item.get("company", {}).get("name", ""),
+                "url": f"https://www.wanted.co.kr/wd/{raw_id}",
                 "source": "원티드",
-            })
+            }))
 
+    unique_pairs = []
     seen_ids = set()
-    unique = []
-    for j in jobs:
-        if j["id"] not in seen_ids:
-            seen_ids.add(j["id"])
-            unique.append(j)
-    unique = unique[:MAX_PER_SOURCE]
+    for raw_id, job in jobs:
+        if job["id"] not in seen_ids:
+            seen_ids.add(job["id"])
+            unique_pairs.append((raw_id, job))
+    unique_pairs = unique_pairs[:MAX_PER_SOURCE]
 
-    for j in unique:
-        detail = _fetch_detail(j.pop("_raw_id"))
-        j.update(detail)
-
-    return unique
+    result = []
+    for raw_id, job in unique_pairs:
+        job.update(_fetch_detail(raw_id))
+        result.append(job)
+    return result
