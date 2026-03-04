@@ -1,14 +1,10 @@
 import requests
 from bs4 import BeautifulSoup
 from utils.dedup import deduplicate
-from scrapers.config import MAX_PER_SOURCE, REQUEST_TIMEOUT, RELEVANT_KEYWORDS, DEFAULT_HEADERS
+from scrapers.config import MAX_PER_SOURCE, REQUEST_TIMEOUT, DEFAULT_HEADERS, is_relevant
 
 SARAMIN_URL = "https://www.saramin.co.kr/zf_user/search/recruit"
 KEYWORDS = ["데이터사이언티스트", "데이터엔지니어", "머신러닝엔지니어", "데이터분석가"]
-
-def _is_relevant(title: str) -> bool:
-    t = title.lower()
-    return any(kw in t for kw in RELEVANT_KEYWORDS)
 
 def scrape_saramin():
     jobs = []
@@ -31,7 +27,7 @@ def scrape_saramin():
             if not title_el:
                 continue
             title = title_el.get_text(strip=True)
-            if not _is_relevant(title):
+            if not is_relevant(title):
                 continue
             href = title_el.get("href", "")
             rec_idx = href.split("rec_idx=")[-1].split("&")[0] if "rec_idx=" in href else href

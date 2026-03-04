@@ -9,6 +9,10 @@ RELEVANT_KEYWORDS = [
 
 KOREA_LOCATIONS = {"한국", "Korea", "Seoul", "서울", "부산"}
 
+def is_relevant(title: str) -> bool:
+    t = title.lower()
+    return any(kw in t for kw in RELEVANT_KEYWORDS)
+
 DEFAULT_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
     "Accept-Language": "ko-KR,ko;q=0.9",

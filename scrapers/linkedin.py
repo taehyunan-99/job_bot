@@ -1,15 +1,11 @@
 import requests
 from bs4 import BeautifulSoup
 from utils.dedup import deduplicate
-from scrapers.config import MAX_PER_SOURCE, REQUEST_TIMEOUT, RELEVANT_KEYWORDS, KOREA_LOCATIONS, DEFAULT_HEADERS
+from scrapers.config import MAX_PER_SOURCE, REQUEST_TIMEOUT, KOREA_LOCATIONS, DEFAULT_HEADERS, is_relevant
 
 LINKEDIN_URL = "https://www.linkedin.com/jobs/search/"
 KEYWORDS = ["데이터 사이언티스트 한국", "데이터 엔지니어 한국", "머신러닝 엔지니어 한국"]
 KOREA_GEO_ID = "105149290"
-
-def _is_relevant(title: str) -> bool:
-    t = title.lower()
-    return any(kw in t for kw in RELEVANT_KEYWORDS)
 
 def scrape_linkedin():
     jobs = []
@@ -36,7 +32,7 @@ def scrape_linkedin():
             location = location_el.get_text(strip=True) if location_el else ""
             if location and not any(loc in location for loc in KOREA_LOCATIONS):
                 continue
-            if not _is_relevant(title):
+            if not is_relevant(title):
                 continue
             url = link_el.get("href", "").split("?")[0]
             job_id = url.rstrip("/").split("/")[-1]

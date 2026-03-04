@@ -48,16 +48,11 @@ def scrape_wanted():
                 "source": "원티드",
             }))
 
-    unique_pairs = []
-    seen_ids = set()
-    for raw_id, job in jobs:
-        if job["id"] not in seen_ids:
-            seen_ids.add(job["id"])
-            unique_pairs.append((raw_id, job))
-    unique_pairs = unique_pairs[:MAX_PER_SOURCE]
+    deduped = deduplicate([job for _, job in jobs])[:MAX_PER_SOURCE]
+    id_map = {job["id"]: raw_id for raw_id, job in jobs}
 
     result = []
-    for raw_id, job in unique_pairs:
-        job.update(_fetch_detail(raw_id))
+    for job in deduped:
+        job.update(_fetch_detail(id_map[job["id"]]))
         result.append(job)
     return result
